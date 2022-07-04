@@ -13,19 +13,24 @@ public class LiftTest {
     public static Lift liftFast = new Lift(TEST_FLOORS_COUNT, TEST_SPEED_FAST, TEST_DOOR_SPEED_FAST);
     public static Lift liftSlow = new Lift(TEST_FLOORS_COUNT, TEST_SPEED_SLOW, TEST_DOOR_SPEED_SLOW);
     public static Lift liftMiddle = new Lift(TEST_FLOORS_COUNT, TEST_SPEED_MIDDLE, TEST_DOOR_SPEED_MIDDLE);
-    public static HashSet<Lift> liftList =  new HashSet<>();
-
+    public static HashSet<Lift> liftSet =  new HashSet<>();
+    private static final String DELIMITER = " -> ";
+    
     @BeforeAll
     public static void testsStart() {
         System.out.println("Tests started");
-        liftList.add(liftFast);
-        liftList.add(liftSlow);
-        liftList.add(liftMiddle);
+        liftSet.add(liftFast);
+        liftSet.add(liftSlow);
+        liftSet.add(liftMiddle);
     }
 
     @BeforeEach
     public void testStart() {
         System.out.println("Test started");
+        for (Lift lift : liftSet) {
+            lift.fillFloors(new LinkedList<>(Arrays.asList(ALL_FLOORS_WAY)));
+            lift.run();
+        }
     }
 
     @AfterAll
@@ -39,11 +44,53 @@ public class LiftTest {
     }
 
     @Test
-    public void setTestFloorsCount() {
-        for (Lift lift : liftList) {
-            lift.fillFloors(new LinkedList<>(Arrays.asList(ALL_FLOORS_WAY)));
-            lift.run();
-            Assertions.assertEquals(lift.getFloorsCount(), 10);
+    public void testFloorsCount() {
+        System.out.println("Test testFloorsCount running...");
+        for (Lift lift : liftSet) {
+            Assertions.assertEquals(TEST_FLOORS_COUNT, lift.getFloorsCount());
+        }
+    }
+
+    @Test
+    public void testTotalSeconds() {
+        System.out.println("Test testTotalSeconds running...");
+        for (Lift actualLift : liftSet) {
+            Lift expectedLift = new Lift(actualLift.getFloorsCount()
+                    , actualLift.getWaitMoveInSeconds()
+                    , actualLift.getWaitDoorsInSeconds());
+            expectedLift.fillFloors(new LinkedList<>(Arrays.asList(ALL_FLOORS_WAY)));
+            int totalSeconds = 0;
+            int previousFloor = -1;
+            while (!expectedLift.getLiftQueue().isEmpty()) {
+                int nextFloor = expectedLift.getLiftQueue().poll();
+                if (previousFloor != -1) {
+                    totalSeconds += Math.abs(previousFloor - nextFloor) * expectedLift.getWaitMoveInSeconds();
+                }
+                previousFloor = nextFloor;
+                totalSeconds += expectedLift.getWaitDoorsInSeconds();
+            }
+            Assertions.assertEquals(totalSeconds, actualLift.getTotalSeconds());
+        }
+    }
+
+    @Test
+    public void testFloorsWay() {
+        System.out.println("Test testFloorsWay running...");
+        for (Lift actualLift : liftSet) {
+            Lift expectedLift = new Lift(actualLift.getFloorsCount()
+                    , actualLift.getWaitMoveInSeconds()
+                    , actualLift.getWaitDoorsInSeconds());
+            expectedLift.fillFloors(new LinkedList<>(Arrays.asList(ALL_FLOORS_WAY)));
+            StringBuilder floors = new StringBuilder();
+            while (!expectedLift.getLiftQueue().isEmpty()) {
+                int nextFloor = expectedLift.getLiftQueue().poll();
+                floors.append("этаж " + nextFloor + DELIMITER);
+            }
+            floors.replace(floors.length() - DELIMITER.length(), floors.length(), "");
+            String actualStr = actualLift.getFloors().toString();
+            String expectedStr = floors.toString();
+            System.out.println(actualStr);
+            Assertions.assertEquals(expectedStr, actualStr);
         }
     }
 }

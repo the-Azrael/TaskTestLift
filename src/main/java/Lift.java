@@ -72,4 +72,12 @@ public class Lift {
     public int getFloorsCount() {
         return floorsCount;
     }
+
+    public int getWaitMoveInSeconds() {
+        return waitMoveInSeconds;
+    }
+
+    public int getWaitDoorsInSeconds() {
+        return waitDoorsInSeconds;
+    }
 }
